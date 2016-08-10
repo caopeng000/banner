@@ -1,0 +1,75 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.0"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+group = 'com.example.testing.customerbanner'
+version = '1.0.6'
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:support-v4:23.4.0'
+}
+
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs //通过from函数指定代码源，这里是默认代码源
+    classifier 'sources'
+}
+
+task generateJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs //source指定了代码源
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+//这里dependsOn意为仅当generateJavadocs完成后才开始本task
+task generateJavadocsJar(type: Jar, dependsOn: generateJavadocs) {
+    from generateJavadocs.destinationDir
+    classifier 'javadoc'
+}
+artifacts {
+//    archives generateJavaDocsJar
+    archives generateSourcesJar
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    pkg {
+        repo = 'maven'
+        name = 'com.example.testing.customerbanner'
+
+        version {
+            name = '1.0.6-tuts'
+            desc = "decent banner"
+//            released = new Date()
+            vcsTag = '1.0.6'
+        }
+
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/caopeng000/banner.git'
+        websiteUrl = 'https://github.com/caopeng000/banner'
+    }
+
+    configurations = ['archives']
+}
